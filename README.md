@@ -1,50 +1,11 @@
-# React + TypeScript + Vite
+## How to get it running locally
+- 1: Clone the repo 
+- 2: Download and open MetaMask 
+- 3: Run `npm run dev`
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## What I would do if I had more time
+The main thing that got me during this exercise was how little I know about crypto and the blockchain. I would like to study more about blockchain and understand whats actually happening behind the scenes. This would allow me to finish the 2nd & 3rd steps, and fully understand "gas" and all of the concepts.
 
-Currently, two official plugins are available:
+I also would clean up my front-end code and make separate components for each main element since the “App.tsx” file got quite large during this. The same goes for cleaning up some of the repeated code in the scss files, I would make the styles more reusable and not use the same code twice. 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+And give the UI another round of polish (think through the UX more through Figma if I was re-doing this project with more time)
