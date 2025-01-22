@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { BrowserProvider, formatEther, Contract } from "ethers";
+import { BrowserProvider, formatEther, Contract, parseEther } from "ethers";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import './App.scss'
 
 
+// Main contract addresses
 const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const ERC20_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 const WETH_ABI = [
@@ -16,6 +17,19 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)",
   "function symbol() view returns (string)"
 ];
+
+// Extended for wrapping
+const WETH_ABI_EXTENDED = [
+  ...WETH_ABI,
+  "function deposit() payable",
+  "function withdraw(uint256) external"
+];
+
+const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+const ROUTER_ABI = [
+  "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)"
+];
+
 
 declare global {
   interface Window {
@@ -32,6 +46,10 @@ function App() {
   const [ercTokenSymbol, setErcTokenSymbol] = useState<string>('');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [wrapAmount, setWrapAmount] = useState<string>('');
+  const [swapAmount, setSwapAmount] = useState<string>('');
+  const [tokenAddress, setTokenAddress] = useState<string>('');
 
   const connectWallet = async () => {
     setIsLoading(true);
@@ -93,7 +111,7 @@ function App() {
   const updateBalances = async (address: string) => {
     if (provider) {
       const balance = await provider.getBalance(address);
-      
+
       const wethContract = new Contract(WETH_ADDRESS, WETH_ABI, provider);
       const wethBalance = await wethContract.balanceOf(address);
 
@@ -112,30 +130,125 @@ function App() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  const wrapEth = async (amount: string) => {
+    if (!provider || !account) return;
+
+    try {
+      const signer = await provider.getSigner();
+      const wethContract = new Contract(WETH_ADDRESS, WETH_ABI_EXTENDED, signer);
+
+      const tx = await wethContract.deposit({
+        value: parseEther(amount)
+      });
+
+      toast.info("Wrapping ETH...");
+      await tx.wait();
+
+      await updateBalances(account);
+
+      toast.success("Successfully wrapped ETH to WETH");
+    } catch (error: unknown) {
+      const errorMessage = typeof error === 'object' && error !== null && 'code' in error
+        ? {
+          'INSUFFICIENT_FUNDS': "Insufficient funds to cover gas fees and wrap amount",
+          'ACTION_REJECTED': "Transaction rejected by user"
+        }[(error as { code: string }).code] || `Failed to wrap ETH: ${(error as { message?: string }).message || String(error)}`
+        : `Failed to wrap ETH: ${String(error)}`;
+
+      toast.error(errorMessage);
+      console.error(error);
+    }
+  }; const swapWethForToken = async (wethAmount: string, tokenAddress: string) => {
+    if (!provider || !account) return;
+
+    try {
+      const signer = await provider.getSigner();
+      const router = new Contract(ROUTER_ADDRESS, ROUTER_ABI, signer);
+
+      const path = [WETH_ADDRESS, tokenAddress];
+      const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+      const tx = await router.swapExactTokensForTokens(
+        parseEther(wethAmount),
+        0,
+        path,
+        account,
+        deadline
+      );
+
+      toast.info("Swapping WETH for token...");
+      await tx.wait();
+
+      await updateBalances(account);
+      toast.success("Swap completed successfully!");
+    } catch (error) {
+      toast.error(`Swap failed: ${error}`);
+    }
+  };
+
   return (
     <>
       <ToastContainer position="top-right" />
 
       <main>
-        <h1>Web3 Wallet Interface</h1>
-
         {isLoading ? (
-          <div className="loadingContainer">Connecting wallet...</div>
+          <div className="notConnected">
+            <div className="dot orange" />
+            Connecting to wallet..
+          </div>
         ) : !account ? (
-          <button className="connectBtn" onClick={connectWallet} disabled={isLoading}>
-            Connect Wallet
-          </button>
+          <>
+            <div className="notConnected">
+              <div className="dot red" />
+              Not Connected to a wallet
+            </div>
+
+            <button className="connectBtn" onClick={connectWallet} disabled={isLoading}>
+              Connect Wallet
+            </button>
+          </>
         ) : (
           <div className="walletInfo">
             <div className="connectionStatus">
               <div className="greenDot" />
-              Connected
+              Connected ( address: <b>{truncateAddress(account)}</b>)
             </div>
 
-            <p>Connected Address: {truncateAddress(account)}</p>
-            <p>ETH Balance: {balance} ETH</p>
-            <p>WETH Balance: {wethBalance} WETH</p>
-            <p>ERC20 Token Balance: {erc20Balance} {ercTokenSymbol}</p>
+            <p className="balanceText">ETH Balance: {balance} ETH</p>
+            <p className="balanceText">WETH Balance: {wethBalance} WETH</p>
+            <p className="balanceText">ERC20 Token Balance: {erc20Balance} {ercTokenSymbol}</p>
+
+            <div className="actions">
+              <div className="form first">
+                <p className="label">Wrap ETH</p>
+
+                <input
+                  type="number"
+                  placeholder="Amount of ETH to wrap"
+                  onChange={(e) => setWrapAmount(e.target.value)}
+                />
+                <button onClick={() => wrapEth(wrapAmount)} disabled={!wrapAmount}>
+                  Wrap
+                </button>
+              </div>
+
+              <div className="form">
+                <p className="label">Swap WETH for Token</p>
+                <input
+                  type="text"
+                  placeholder="Token Address"
+                  onChange={(e) => setTokenAddress(e.target.value)}
+                />
+                <input
+                  type="number"
+                  placeholder="WETH Amount"
+                  onChange={(e) => setSwapAmount(e.target.value)}
+                />
+                <button onClick={() => swapWethForToken(swapAmount, tokenAddress)} disabled={!swapAmount || !tokenAddress}>
+                  Swap
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
@@ -143,4 +256,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

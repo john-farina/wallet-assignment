@@ -1,2 +1,99 @@
-#root {
+main {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  flex-direction: column;
+
+  button {
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: rgb(67, 67, 67);
+    border: rgb(22, 22, 22);
+
+    &:hover {
+      background: rgb(98, 98, 98);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  .notConnected,
+  .loading {
+    padding: 10px;
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 5px;
+    margin-bottom: 10px;
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+
+      &.red {
+        background-color: rgb(178, 30, 30);
+      }
+
+      &.orange {
+        background-color: rgb(178, 114, 30);
+      }
+    }
+  }
+
+  .connectBtn {
+    width: 50%;
+    padding: 10px 0;
+    margin-top: -10px;
+  }
+
+  .walletInfo {
+    padding: 10px;
+    background-color: rgb(30, 30, 30);
+    width: 50%;
+
+    .connectionStatus {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      gap: 5px;
+      margin-bottom: 10px;
+
+      .greenDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: rgb(30, 178, 30);
+      }
+    }
+
+    .balanceText {
+      font-weight: 200;
+    }
+
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 15px;
+
+      &.first {
+        margin-top: 15px;
+      }
+
+      input {
+        background-color: rgb(241, 241, 241);
+        border: 1px solid rgb(103, 103, 103);
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: black;
+      }
+    }
+  }
 }
